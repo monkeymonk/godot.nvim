@@ -5,6 +5,10 @@ M.debugger = require("godot.debugger")
 -- default config
 local config = {
 	bin = "godot",
+	dap = {
+		host = "127.0.0.1",
+		post = 6006,
+	},
 	gui = {
 		console_config = {
 			anchor = "SW",
