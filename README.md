@@ -42,13 +42,7 @@
 
 ## Installation
 
-Use your favorite plugin manager. For example, with [packer.nvim](https://github.com/wbthomason/packer.nvim):
-
-```lua
-use("lommix/godot.nvim")
-```
-
-Or with [lazy.nvim](https://github.com/folke/lazy.nvim):
+Use your favorite plugin manager. For example, with  [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
@@ -64,17 +58,16 @@ Or with [lazy.nvim](https://github.com/folke/lazy.nvim):
 In your Neovim configuration, create a file or directly place:
 
 ```lua
--- Example config
-local config = {
+{
   -- Path to your Godot executable
   bin = "godot",
-  
+
   -- DAP configuration
   dap = {
     host = "127.0.0.1",
     port = 6006,
   },
-  
+
   -- GUI settings for console (passed to nvim_open_win)
   gui = {
     console_config = {
@@ -88,20 +81,10 @@ local config = {
       width = 99999,
     },
   },
-  
+
   -- Expose user commands automatically (optional)
   expose_commands = true,
 }
-
-godot.setup(config)
-
--- Optional keybindings:
-local map = vim.keymap.set
-map("n", "<leader>dr", godot.debugger.debug)
-map("n", "<leader>dd", godot.debugger.debug_at_cursor)
-map("n", "<leader>dq", godot.debugger.quit)
-map("n", "<leader>dc", godot.debugger.continue)
-map("n", "<leader>ds", godot.debugger.step)
 ```
 
 
