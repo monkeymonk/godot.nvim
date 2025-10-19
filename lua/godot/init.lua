@@ -1,10 +1,30 @@
+--------------------------------------------------------------------------------
+-- Godot Neovim Plugin
+--
+-- This plugin integrates Godot-specific debugging, LSP, and Treesitter into Neovim.
+-- It provides a set of commands to control and manage a Godot debug session.
+--------------------------------------------------------------------------------
+
 local M = {}
--------------------------------------------------------------------
-M.debugger = require("godot.debugger")
--------------------------------------------------------------------
--- default config
-local config = {
+
+-- =============================================================================
+-- Module Imports
+-- =============================================================================
+local dap = require("godot.dap")
+local debugger = require("godot.debugger")
+local lsp = require("godot.lsp")
+local treesitter = require("godot.treesitter")
+
+-- =============================================================================
+-- Default Configuration
+-- =============================================================================
+local default_config = {
 	bin = "godot",
+	dap = {
+		host = "127.0.0.1",
+		post = 6006,
+	},
+	expose_commands = true,
 	gui = {
 		console_config = {
 			anchor = "SW",
@@ -20,8 +40,13 @@ local config = {
 	pipepath = vim.fn.stdpath("cache") .. "/godot.pipe",
 }
 
--- Check if the pipepath is already in the server list
--- @param pipe : path to the pipe
+-- =============================================================================
+-- Local Utility Functions
+-- =============================================================================
+
+--- Checks if a Neovim server is already running on the given pipe.
+-- @param pipe string: The full path to the pipe.
+-- @return boolean: Whether the pipe is found in the existing server list.
 local function is_server_running(pipe)
 	local servers = vim.fn.serverlist()
 	for _, server in ipairs(servers) do
@@ -32,27 +57,32 @@ local function is_server_running(pipe)
 	return false
 end
 
--------------------------------------------------------------------
--- setup
--- @param opts : see above
-M.setup = function(opts)
-	config = vim.tbl_deep_extend("force", config, opts or {})
+-- =============================================================================
+-- Plugin Setup
+-- =============================================================================
 
-	-- If the server is running, "serverstart" automatically sets up Neovim to listen on the given pipe
-	if not vim.loop.fs_stat(config.pipepath) and not is_server_running(config.pipepath) then
-		vim.fn.serverstart(config.pipepath)
+--- Sets up the Godot plugin.
+-- Merges user-provided configuration with defaults, ensures the Neovim server
+-- is properly started for the given `pipepath`, and initializes submodules.
+--
+-- @param opts table|nil: A table containing user configuration overrides.
+function M.setup(opts)
+	-- Merge user config into the default config
+	M.config = vim.tbl_deep_extend("force", default_config, opts or {})
+
+	-- Start server if not already running
+	if not vim.loop.fs_stat(M.config.pipepath) and not is_server_running(M.config.pipepath) then
+		vim.fn.serverstart(M.config.pipepath)
 	end
 
-	M.debugger.setup(config)
-
-	vim.api.nvim_create_user_command("GodotDebug", M.debugger.debug, {})
-	vim.api.nvim_create_user_command("GodotBreakAtCursor", M.debugger.debug_at_cursor, {})
-	vim.api.nvim_create_user_command("GodotStep", M.debugger.step, {})
-	vim.api.nvim_create_user_command("GodotQuit", M.debugger.quit, {})
-	vim.api.nvim_create_user_command("GodotContinue", M.debugger.continue, {})
+	-- Initialize submodules with the final config
+	dap.setup(M.config)
+	debugger.setup(M.config)
+	lsp.setup(M.config)
+	treesitter.setup(M.config)
 end
 
+-- Automatically call setup on load (optional; some users prefer calling setup() in their config)
 M.setup()
 
--- reload on run for debug stuff
 return M
